@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Form with Paystack</title>
+  <link rel="stylesheet" href="output.css">
+  <!-- Paystack Inline JS CDN -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <!-- Form Container -->
+  <div class="bg-white p-6 rounded-lg w-[90%] max-w-3xl">
+    <!-- Form Header -->
+    <h2 class="text-xl font-bold mb-4">Fill the form to make payment</h2>
+
+    <!-- Form -->
+    <form id="paymentForm" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Name <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            class="mt-1 block w-full p-3 border border-gray-300 rounded-md outline-none"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Email <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="mt-1 block w-full p-3 border border-gray-300 rounded-md outline-none"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Phone Number <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            class="mt-1 block w-full p-3 border border-gray-300 rounded-md outline-none"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Address <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            class="mt-1 block w-full p-3 border border-gray-300 rounded-md outline-none"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Total Billed Amount <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="number"
+            id="totalBilled"
+            name="totalBilled"
+            class="mt-1 block w-full p-3 border border-gray-300 rounded-md outline-none"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            City <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="city"
+            name="city"
+            class="mt-1 block w-full p-3 border border-gray-300 rounded-md outline-none"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Referral Code
+          </label>
+          <input
+            type="text"
+            id="referralCode"
+            name="referralCode"
+            class="mt-1 block w-full p-3 border border-gray-300 rounded-md outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">
+            Quote ID
+          </label>
+          <input
+            type="text"
+            id="quoteId"
+            name="quoteId"
+            class="mt-1 block w-full p-3 border border-gray-300 rounded-md outline-none"
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800"
+        >
+          Pay Now
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    // Get DOM elements
+    const paymentForm = document.getElementById("paymentForm");
+
+    // Handle form submission and Paystack payment
+    paymentForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      // Collect form data
+      const formData = {
+        name: document.getElementById("name").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        address: document.getElementById("address").value,
+        totalBilled: document.getElementById("totalBilled").value,
+        city: document.getElementById("city").value,
+        referralCode: document.getElementById("referralCode").value || "",
+        quoteId: document.getElementById("quoteId").value || "",
+      };
+
+      // Validate required fields (excluding referralCode and quoteId)
+      const requiredFields = ["name", "email", "phone", "address", "totalBilled", "city"];
+      for (const field of requiredFields) {
+        if (!formData[field]) {
+          alert(`Please fill in the ${field.replace(/([A-Z])/g, " $1").toLowerCase()} field.`);
+          return;
+        }
+      }
+
+      // Ensure totalBilled is a number
+      const amount = parseFloat(formData.totalBilled);
+      if (isNaN(amount) || amount <= 0) {
+        alert("Please enter a valid total billed amount.");
+        return;
+      }
+
+      // Initialize Paystack payment
+      const handler = PaystackPop.setup({
+        key: "pk_test_b186c94463b3edfc082e19cf169e37b25f583fea", // Paystack test public key
+        email: formData.email,
+        amount: amount * 100, // Paystack expects amount in kobo (multiply by 100)
+        currency: "NGN", // Adjust based on your currency
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Name",
+              variable_name: "name",
+              value: formData.name,
+            },
+            {
+              display_name: "Phone",
+              variable_name: "phone",
+              value: formData.phone,
+            },
+            {
+              display_name: "Address",
+              variable_name: "address",
+              value: formData.address,
+            },
+            {
+              display_name: "City",
+              variable_name: "city",
+              value: formData.city,
+            },
+            {
+              display_name: "Referral Code",
+              variable_name: "referral_code",
+              value: formData.referralCode || "N/A",
+            },
+            {
+              display_name: "Quote ID",
+              variable_name: "quote_id",
+              value: formData.quoteId || "N/A",
+            },
+          ],
+        },
+        callback: (response) => {
+          // Handle successful payment
+          console.log("Payment successful! Transaction reference:", response.reference);
+          alert("Payment successful! Transaction reference: " + response.reference);
+          paymentForm.reset(); // Reset form after successful payment
+        },
+        onClose: () => {
+          // Handle payment modal closed without completion
+          console.log("Payment modal closed");
+          alert("Payment was not completed.");
+        },
+      });
+
+      handler.openIframe(); // Open Paystack payment modal
+    });
+  </script>
+</body>
+</html>
